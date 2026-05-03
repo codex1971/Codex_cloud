@@ -14,38 +14,36 @@ uploadBtn.onclick = async () => {
     uploadBtn.disabled = true;
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('reqtype', 'fileupload');
+    formData.append('userhash', ''); // এটি খালি থাকলেও সমস্যা নেই
+    formData.append('fileToUpload', file);
 
     try {
-        // ফাইল আপলোড করার জন্য একটি ফ্রি এবং শক্তিশালী API ব্যবহার করছি
-        const response = await fetch('https://file.io', {
+        // আমরা এখন Catbox API ব্যবহার করছি যা গিটহাবে ভালো কাজ করে
+        const response = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://catbox.moe/user/api.php'), {
             method: 'POST',
             body: formData
         });
 
-        const data = await response.json();
-
-        if (data.success) {
-            // রেজাল্ট বক্স দেখানো এবং লিংক বসানো
+        if (response.ok) {
+            const link = await response.text();
             resultDiv.style.display = 'block';
-            downloadLinkInput.value = data.link; // এটিই আপনার জেনারেট করা লিংক
+            downloadLinkInput.value = link; // সরাসরি ডাউনলোড লিংক
             uploadBtn.innerText = "সফল হয়েছে!";
-        } else {
-            alert("আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
-            uploadBtn.innerText = "লিংক জেনারেট করুন";
             uploadBtn.disabled = false;
+        } else {
+            throw new Error("Upload Failed");
         }
     } catch (error) {
-        alert("সার্ভার সমস্যা! ইন্টারনেটে কানেকশন চেক করুন।");
+        console.error(error);
+        alert("লিংক তৈরি করতে সমস্যা হচ্ছে। অন্য একটি ফাইল ট্রাই করুন।");
         uploadBtn.innerText = "আবার চেষ্টা করুন";
         uploadBtn.disabled = false;
     }
 };
 
-// লিংক কপি করার ফাংশন
 function copyLink() {
     downloadLinkInput.select();
     document.execCommand('copy');
     alert("লিংক কপি হয়েছে!");
 }
-
