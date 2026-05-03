@@ -14,21 +14,20 @@ uploadBtn.onclick = async () => {
     uploadBtn.disabled = true;
 
     const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('userhash', ''); // এটি খালি থাকলেও সমস্যা নেই
-    formData.append('fileToUpload', file);
+    formData.append('file', file);
 
     try {
-        // আমরা এখন Catbox API ব্যবহার করছি যা গিটহাবে ভালো কাজ করে
-        const response = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://catbox.moe/user/api.php'), {
+        // এই API টি কোনো প্রক্সি ছাড়াই সরাসরি গিটহাবে কাজ করে (Gofiles API)
+        const response = await fetch('https://store1.gofiles.io/upload', {
             method: 'POST',
             body: formData
         });
 
-        if (response.ok) {
-            const link = await response.text();
+        const data = await response.json();
+
+        if (data.status === true) {
             resultDiv.style.display = 'block';
-            downloadLinkInput.value = link; // সরাসরি ডাউনলোড লিংক
+            downloadLinkInput.value = data.data.download_url; // সরাসরি ডাউনলোড লিংক
             uploadBtn.innerText = "সফল হয়েছে!";
             uploadBtn.disabled = false;
         } else {
@@ -36,9 +35,28 @@ uploadBtn.onclick = async () => {
         }
     } catch (error) {
         console.error(error);
-        alert("লিংক তৈরি করতে সমস্যা হচ্ছে। অন্য একটি ফাইল ট্রাই করুন।");
-        uploadBtn.innerText = "আবার চেষ্টা করুন";
+        // যদি উপরেরটি কাজ না করে, বিকল্প আর একটি সহজ মেথড
+        uploadBtn.innerText = "বিকল্প চেষ্টা হচ্ছে...";
+        
+        try {
+            const res2 = await fetch('https://file.io', {
+                method: 'POST',
+                body: formData
+            });
+            const data2 = await res2.json();
+            if(data2.success) {
+                resultDiv.style.display = 'block';
+                downloadLinkInput.value = data2.link;
+                uploadBtn.innerText = "সফল হয়েছে!";
+            } else {
+                alert("সবগুলো সার্ভার বিজি। কিছুক্ষণ পর চেষ্টা করুন।");
+            }
+        } catch (e) {
+            alert("আপনার ইন্টারনেট বা সার্ভারে সমস্যা হচ্ছে।");
+        }
+        
         uploadBtn.disabled = false;
+        uploadBtn.innerText = "আবার চেষ্টা করুন";
     }
 };
 
